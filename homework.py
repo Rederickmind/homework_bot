@@ -2,6 +2,7 @@ import logging
 from logging import StreamHandler
 import sys
 import os
+import http
 import time
 from http import HTTPStatus
 
@@ -55,14 +56,24 @@ def send_message(bot, message):
 def get_api_answer(timestamp):
     """Получение ответа от API."""
     params = {'from_date': timestamp}
-    api_answer = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    if api_answer.status_code != HTTPStatus.OK:
-        message = (f'Эндпоинт {ENDPOINT} недоступен. '
-                   f'Код ответа API: {api_answer.status_code}')
-        logger.error(message)
-        raise requests.RequestException(message)
-    else:
+    try:
+        api_answer = requests.get(
+            ENDPOINT,
+            headers=HEADERS,
+            params=params
+        )
+        if api_answer.status_code != HTTPStatus.OK:
+            message = (
+                f'Эндпоинт {ENDPOINT} недоступен. '
+                f'Код ответа API: {api_answer.status_code}'
+            )
+            logger.error(message)
+            raise http.exceptions.HTTPError()
         return api_answer.json()
+    except requests.exceptions.ConnectionError:
+        logger.error('Ошибка подключения')
+    except requests.exceptions.RequestException as request_error:
+        logger.error(f'Ошибка запроса {request_error}')
 
 
 def check_response(response):
