@@ -3,7 +3,7 @@ from logging import StreamHandler
 import sys
 import os
 import time
-# from http import HTTPStatus
+from http import HTTPStatus
 
 import requests
 import telegram
@@ -55,12 +55,12 @@ def send_message(bot, message):
 def get_api_answer(timestamp):
     """Получение ответа от API."""
     params = {'from_date': timestamp}
-    try:
-        api_answer = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    except requests.RequestException:
+    api_answer = requests.get(ENDPOINT, headers=HEADERS, params=params)
+    if api_answer.status_code != HTTPStatus.OK:
         message = (f'Эндпоинт {ENDPOINT} недоступен. '
                    f'Код ответа API: {api_answer.status_code}')
         logger.error(message)
+        raise requests.RequestException(message)
     else:
         return api_answer.json()
 
@@ -76,19 +76,18 @@ def check_response(response):
     if 'current_date' not in response:
         logger.debug('Ответ не содержит ключ current_date')
         raise KeyError('Ответ не содержит ключ current_date')
-
     homeworks = response['homeworks']
     if not isinstance(homeworks, list):
         logger.debug('homeworks не возвращается в виде списка')
-        if 'homework_name' not in homeworks:
-            logger.debug('Ответ не содержит ключ homework_name')
-            raise KeyError('Ответ не содержит ключ homework_name')
         raise TypeError('homeworks не возвращается в виде списка')
     return homeworks
 
 
 def parse_status(homework):
     """Извлечение статуса домашней работы."""
+    if 'homework_name' not in homework:
+        logger.debug('Ответ не содержит ключ homework_name')
+        raise KeyError('Ответ не содержит ключ homework_name')
     homework_name = homework.get('homework_name')
     logger.debug(f'Название домашки: {homework_name}')
     homework_status = homework.get('status')
