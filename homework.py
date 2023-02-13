@@ -3,7 +3,7 @@ from logging import StreamHandler
 import sys
 import os
 import time
-from http import HTTPStatus
+# from http import HTTPStatus
 
 import requests
 import telegram
@@ -55,12 +55,12 @@ def send_message(bot, message):
 def get_api_answer(timestamp):
     """Получение ответа от API."""
     params = {'from_date': timestamp}
-    api_answer = requests.get(ENDPOINT, headers=HEADERS, params=params)
-    if api_answer.status_code != HTTPStatus.OK:
+    try:
+        api_answer = requests.get(ENDPOINT, headers=HEADERS, params=params)
+    except requests.RequestException:
         message = (f'Эндпоинт {ENDPOINT} недоступен. '
                    f'Код ответа API: {api_answer.status_code}')
         logger.error(message)
-        raise requests.RequestException(message)
     else:
         return api_answer.json()
 
