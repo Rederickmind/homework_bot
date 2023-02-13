@@ -47,7 +47,7 @@ def send_message(bot, message):
     """Отправка сообщений."""
     try:
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.info(f'Бот отправил сообщение {message}')
+        logger.debug(f'Бот отправил сообщение {message}')
     except TelegramError as error:
         logger.error(f'Сообщение не отправленно: {error}')
 
@@ -60,7 +60,7 @@ def get_api_answer(timestamp):
         message = (f'Эндпоинт {ENDPOINT} недоступен. '
                    f'Код ответа API: {api_answer.status_code}')
         logger.error(message)
-        raise Exception(message)
+        raise requests.RequestException(message)
     else:
         return api_answer.json()
 
@@ -73,6 +73,9 @@ def check_response(response):
     if 'homeworks' not in response:
         logger.debug('Ответ не содержит ключ homeworks')
         raise KeyError('Ответ не содержит ключ homeworks')
+    if 'homework_name' not in response:
+        logger.debug('Ответ не содержит ключ homework_name')
+        raise KeyError('Ответ не содержит ключ homework_name')
     if 'current_date' not in response:
         logger.debug('Ответ не содержит ключ current_date')
         raise KeyError('Ответ не содержит ключ current_date')
