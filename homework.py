@@ -73,9 +73,6 @@ def check_response(response):
     if 'homeworks' not in response:
         logger.debug('Ответ не содержит ключ homeworks')
         raise KeyError('Ответ не содержит ключ homeworks')
-    if 'homework_name' not in response:
-        logger.debug('Ответ не содержит ключ homework_name')
-        raise KeyError('Ответ не содержит ключ homework_name')
     if 'current_date' not in response:
         logger.debug('Ответ не содержит ключ current_date')
         raise KeyError('Ответ не содержит ключ current_date')
@@ -83,7 +80,10 @@ def check_response(response):
     homeworks = response['homeworks']
     if not isinstance(homeworks, list):
         logger.debug('homeworks не возвращается в виде списка')
-        raise KeyError('homeworks не возвращается в виде списка')
+        if 'homework_name' not in homeworks:
+            logger.debug('Ответ не содержит ключ homework_name')
+            raise KeyError('Ответ не содержит ключ homework_name')
+        raise TypeError('homeworks не возвращается в виде списка')
     return homeworks
 
 
