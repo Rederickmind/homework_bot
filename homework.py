@@ -10,7 +10,6 @@ import requests
 import telegram
 from dotenv import load_dotenv
 from telegram import TelegramError
-from telegram.error import NetworkError
 
 load_dotenv()
 
@@ -116,12 +115,8 @@ def main():
     if not check_tokens():
         logger.critical('Отсутствуют необходимые токены.')
         sys.exit
-    try:
-        bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    except NetworkError as error:
-        raise telegram.error.NetworkError(
-            f'{error} - Не удается подключиться к Telegram'
-        )
+
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
     # timestamp = int(time.time())
     timestamp = 0
     current_report = {}
