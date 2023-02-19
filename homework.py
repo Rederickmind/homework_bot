@@ -114,7 +114,7 @@ def main():
     """Основная логика работы бота."""
     if not check_tokens():
         logger.critical('Отсутствуют необходимые токены.')
-        sys.exit
+        raise sys.exit()
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
     # timestamp = int(time.time())
