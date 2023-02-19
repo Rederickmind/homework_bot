@@ -10,6 +10,7 @@ import requests
 import telegram
 from dotenv import load_dotenv
 from telegram import TelegramError
+from telegram.error import NetworkError
 
 load_dotenv()
 
@@ -47,10 +48,12 @@ def check_tokens():
 def send_message(bot, message):
     """Отправка сообщений."""
     try:
+        logger.debug('Начало отправки сообщения')
         bot.send_message(TELEGRAM_CHAT_ID, message)
-        logger.debug(f'Бот отправил сообщение {message}')
     except TelegramError as error:
         logger.error(f'Сообщение не отправленно: {error}')
+    else:
+        logger.debug(f'Бот отправил сообщение  - {message}')
 
 
 def get_api_answer(timestamp):
@@ -71,33 +74,31 @@ def get_api_answer(timestamp):
             raise http.exceptions.HTTPError()
         return api_answer.json()
     except requests.exceptions.ConnectionError:
-        logger.error('Ошибка подключения')
+        raise requests.exceptions.ConnectionError('Ошибка подключения')
     except requests.exceptions.RequestException as request_error:
-        logger.error(f'Ошибка запроса {request_error}')
+        raise requests.exceptions.RequestException(
+            f'Ошибка запроса {request_error}'
+        )
 
 
 def check_response(response):
     """Проверка ответа."""
     if not isinstance(response, dict):
-        logger.debug('Ответ не является словарем')
         raise TypeError('Ответ не является словарем')
     if 'homeworks' not in response:
-        logger.debug('Ответ не содержит ключ homeworks')
         raise KeyError('Ответ не содержит ключ homeworks')
     if 'current_date' not in response:
-        logger.debug('Ответ не содержит ключ current_date')
         raise KeyError('Ответ не содержит ключ current_date')
     homeworks = response['homeworks']
     if not isinstance(homeworks, list):
-        logger.debug('homeworks не возвращается в виде списка')
         raise TypeError('homeworks не возвращается в виде списка')
     return homeworks
 
 
 def parse_status(homework):
     """Извлечение статуса домашней работы."""
+    logger.debug('Начало парсинга домашки')
     if 'homework_name' not in homework:
-        logger.debug('Ответ не содержит ключ homework_name')
         raise KeyError('Ответ не содержит ключ homework_name')
     homework_name = homework.get('homework_name')
     logger.debug(f'Название домашки: {homework_name}')
@@ -110,15 +111,25 @@ def parse_status(homework):
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
+def telegram_initialization():
+    """Инициализация Telegram бота."""
+    try:
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        return bot
+    except NetworkError as error:
+        raise telegram.error.NetworkError(
+            f'{error} - Не удается подключиться к Telegram'
+        )
+
+
 def main():
     """Основная логика работы бота."""
-    if check_tokens() is False:
+    if not check_tokens():
         logger.critical('Отсутствуют необходимые токены.')
-        raise SystemExit
-
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    timestamp = int(time.time())
-    # timestamp = 0
+        sys.exit
+    bot = telegram_initialization()
+    # timestamp = int(time.time())
+    timestamp = 0
     current_report = {}
     prev_report = {}
 
@@ -153,7 +164,8 @@ def main():
             if current_report != prev_report:
                 send_message(bot, message)
                 prev_report = current_report.copy()
-        time.sleep(RETRY_PERIOD)
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
