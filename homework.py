@@ -111,23 +111,17 @@ def parse_status(homework):
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
-def telegram_initialization():
-    """Инициализация Telegram бота."""
-    try:
-        bot = telegram.Bot(token=TELEGRAM_TOKEN)
-        return bot
-    except NetworkError as error:
-        raise telegram.error.NetworkError(
-            f'{error} - Не удается подключиться к Telegram'
-        )
-
-
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
         logger.critical('Отсутствуют необходимые токены.')
         sys.exit
-    bot = telegram_initialization()
+    try:
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    except NetworkError as error:
+        raise telegram.error.NetworkError(
+            f'{error} - Не удается подключиться к Telegram'
+        )
     # timestamp = int(time.time())
     timestamp = 0
     current_report = {}
