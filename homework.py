@@ -72,12 +72,10 @@ def get_api_answer(timestamp):
             logger.error(message)
             raise http.exceptions.HTTPError()
         return api_answer.json()
-    except requests.exceptions.ConnectionError:
-        raise requests.exceptions.ConnectionError('Ошибка подключения')
+    except requests.ConnectionError:
+        raise requests.ConnectionError('Ошибка подключения')
     except requests.exceptions.RequestException as request_error:
-        raise requests.exceptions.RequestException(
-            f'Ошибка запроса {request_error}'
-        )
+        logger.error(f'Ошибка запроса {request_error}')
 
 
 def check_response(response):
