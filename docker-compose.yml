@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  link_fix_bot:
+    build: .
+    container_name: homework_bot
+    command: python homework.py
+    ports:
+      - 1911:1911
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
