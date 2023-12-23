@@ -115,7 +115,6 @@ def main():
         raise sys.exit()
 
     bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    # timestamp = int(time.time())
     timestamp = 0
     current_report = {}
     prev_report = {}
